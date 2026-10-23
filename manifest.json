@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "AC2Git",
+  "version": "1.0.0",
+  "description": "Pushes Accepted LeetCode submissions to your leetcode-submissions GitHub repo.",
+  "minimum_chrome_version": "140",
+  "permissions": ["storage"],
+  "host_permissions": ["https://api.github.com/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "AC2Git", "default_popup": "popup.html" },
+  "content_scripts": [
+    {
+      "matches": ["https://leetcode.com/*"],
+      "js": ["hook.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://leetcode.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}
