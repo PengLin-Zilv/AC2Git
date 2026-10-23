@@ -6,7 +6,7 @@ const storageLocked = chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTE
 
 const TARGET = 'leetcode-submissions';
 const PATH = /^\d{4,}-[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z]+$/; // repo root only: no slashes, no dotfiles
-const LEETCODE_FAILED = "Not pushed: couldn't read the submission from LeetCode (its API may have changed).";
+const LEETCODE_FAILED = "Not pushed: couldn't read the submission from LeetCode. Submit again. If it keeps failing, LeetCode may have changed its API.";
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (fromLeetCode(sender)) {
@@ -17,7 +17,8 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (!fromPopup(sender)) return;
   const job = msg?.type === 'save' ? save(msg.token) : msg?.type === 'status' ? status() : null;
   if (!job) return;
-  job.then(reply, () => reply({ ok: false, text: 'Something went wrong. Try again.' })); // never leave the popup waiting
+  // Never leave the popup waiting. Only a save shows this text; a failed status shows the popup's own.
+  job.then(reply, () => reply({ ok: false, text: 'Not saved: something went wrong. Try again.' }));
   return true; // keeps the channel open for the async reply; returning a Promise needs Chrome 148+
 });
 
@@ -36,15 +37,19 @@ function isFile(m) {
 
 // ---- Popup
 
+let saves = 0; // a check can outlast its popup: only the newest save may store
+
 async function save(raw) {
   const token = typeof raw === 'string' ? raw.trim() : '';
+  const seq = ++saves;
   const proof = await check(token);
-  if (!proof.ok) return { ok: false, text: proof.text };
-  const owner = proof.target.owner.login;
-  const repo = proof.target.name;
+  if (seq !== saves) return { ok: false, text: 'Not saved: a newer token was submitted.' };
+  if (!proof.ok) return { ok: false, text: `Not saved: ${proof.text}` };
+  const { owner: { login: owner }, name: repo } = proof.target;
   await storageLocked;
   await chrome.storage.local.set({ token, owner, repo });
-  return { ok: true, text: `OK: token reaches only ${owner}/${repo} (${proof.checked} other repos checked). Saved.` };
+  return { ok: true, text: proof.checked ? `Saved. Reaches ${repo} and none of your other repos (${proof.checked} checked).`
+    : `Saved. Reaches ${repo}, and no other repo of yours is visible to it.` };
 }
 
 async function status() {
@@ -53,28 +58,30 @@ async function status() {
 }
 
 // ---- Token check
-// Read-only GETs proving the token reaches your own leetcode-submissions, no other repo, and no
-// SSH keys. Test & save and every push run it. → { ok: true, target, checked } or a failure.
+// Read-only GETs proving the token reaches your own leetcode-submissions, no other repo, and no SSH keys.
+// Test & save and every push run it. → { ok: true, target, checked: listed other repos (public + granted private) } or a failure.
+// Failure texts are "reason. Fix." fragments; save() and notPushed() add the outcome word.
 
 const fail = (kind, text, status) => ({ ok: false, kind, text, status });
 const githubError = (status) => fail('github', `GitHub error ${status}. Try again in a minute.`, status);
+const ONLY_SELECT = 'Delete it on GitHub and use one with Only select repositories → leetcode-submissions.';
 
 async function check(token) {
-  if (!/^github_pat_\w+$/.test(token)) return fail('unusable', 'Use a fine-grained token (starts with github_pat_).');
+  if (!/^github_pat_\w+$/.test(token)) return fail('unusable', 'use a fine-grained token (starts with github_pat_).');
   try {
     return await checkRepos(token);
   } catch {
-    return fail('github', "Couldn't reach GitHub.", 'network');
+    return fail('github', "couldn't reach GitHub. Check your connection and try again.", 'network');
   }
 }
 
 async function checkRepos(token) {
   const list = await gh('GET', '/user/repos?affiliation=owner&per_page=100', token);
-  if (list.status === 401) return fail('revoked', 'GitHub rejected this token.');
+  if (list.status === 401) return fail('revoked', 'GitHub rejected this token. It may be expired, revoked or not fully copied.');
   const repos = list.status === 200 ? await list.json().catch(() => null) : null;
   if (!Array.isArray(repos)) return githubError(list.status);
   if (/rel="next"/.test(list.headers.get('link') ?? '')) {
-    return fail('unusable', 'You own over 100 repos, more than AC2Git can check.');
+    return fail('unusable', 'you own over 100 repos, more than AC2Git can check.');
   }
 
   const target = repos.find((r) => r.name.toLowerCase() === TARGET);
@@ -83,20 +90,20 @@ async function checkRepos(token) {
   // The list shows every public repo you own, but only the private repos the token was granted.
   const readable = others.find((r) => r.private);
   if (readable) {
-    return fail('overScoped', `Rejected: this token can read ${readable.full_name}. Use Only select repositories → leetcode-submissions.`);
+    return fail('overScoped', `this token can read ${readable.full_name}. ${ONLY_SELECT}`);
   }
 
   // The target goes first as a positive control: if GitHub ever changes what the probe needs,
   // the target fails too, so the check fails closed instead of passing every other repo.
   const reach = target ? await probe(token, collaborators(target)) : 'refused';
   if (reach === 'refused') {
-    return fail('noTarget', "Rejected: this token can't reach your leetcode-submissions repo. Resource owner: you; Only select repositories → leetcode-submissions.");
+    return fail('noTarget', "this token can't reach your leetcode-submissions repo. Check it exists and the token selects it (Resource owner: you).");
   }
   if (reach !== 'reached') return githubError(reach);
 
   const keys = await probe(token, '/user/keys?per_page=1');
   if (keys === 'reached') {
-    return fail('overScoped', 'Rejected: this token has the Git SSH keys permission, which reaches every repo. Set it to No access.');
+    return fail('overScoped', 'this token has the Git SSH keys permission, which reaches every repo. Delete it on GitHub and use one without it.');
   }
   if (keys !== 'refused') return githubError(keys);
 
@@ -106,7 +113,7 @@ async function checkRepos(token) {
     // A proven reach outranks an error: the fix is a new token, not a retry.
     const reached = results.indexOf('reached');
     if (reached !== -1) {
-      return fail('overScoped', `Rejected: this token also reaches ${batch[reached].full_name}. Use Only select repositories → leetcode-submissions.`);
+      return fail('overScoped', `this token also reaches ${batch[reached].full_name}. ${ONLY_SELECT}`);
     }
     const error = results.find((result) => result !== 'refused');
     if (error !== undefined) return githubError(error);
@@ -140,16 +147,15 @@ function enqueue(job) {
 }
 
 async function push(file) {
-  const { token, owner, repo } = await chrome.storage.local.get(['token', 'owner', 'repo']);
-  if (!token) return report(false, 'Not pushed: no token set. Open AC2Git and paste one.');
-  const where = `${owner}/${repo}`;
+  const { token } = await chrome.storage.local.get('token');
+  if (!token) return report(false, 'Not pushed: no token saved. Paste one in AC2Git, then submit again.');
   const proof = await check(token); // on a reject, storage stays as is: the next push checks again
-  if (!proof.ok) return report(false, notPushed(proof, where));
+  if (!proof.ok) return report(false, notPushed(proof));
   try {
     const failure = await commit(token, proof.target, file);
-    return failure ? report(false, notPushed(failure, where)) : report(true, `OK ${file.path}`);
+    return failure ? report(false, notPushed(failure)) : report(true, `OK ${file.path}`);
   } catch {
-    return report(false, notPushed({ kind: 'github', status: 'network' }, where));
+    return report(false, notPushed({ kind: 'github', status: 'network' }));
   }
 }
 
@@ -173,12 +179,13 @@ function writeFailure(status) {
   return { kind: 'github', status };
 }
 
-function notPushed(f, where) {
+// A token fix doesn't bring back the missed submission, so those texts end with "then submit again".
+function notPushed(f) {
   switch (f.kind) {
-    case 'revoked': return 'Not pushed: GitHub rejected the token (expired or revoked). Paste a new one.';
-    case 'noTarget': return `Not pushed: token can't write to ${where}. It needs Contents: Read and write.`;
-    case 'github': return `Not pushed: GitHub error ${f.status}. Submit again to retry.`;
-    case 'overScoped': return `Not pushed: ${f.text.replace('Rejected: ', '')} Revoke it on GitHub and paste a new one.`;
+    case 'revoked': return 'Not pushed: GitHub rejected the token (expired or revoked). Paste a new one in AC2Git, then submit again.';
+    case 'noTarget': return "Not pushed: can't write to leetcode-submissions. Check the repo exists and the token selects it with Contents: Read and write, then submit again.";
+    case 'github': return f.status === 'network' ? "Not pushed: couldn't reach GitHub. Submit again." : `Not pushed: GitHub error ${f.status}. Submit again.`;
+    case 'overScoped': return `Not pushed: ${f.text.replace(/\.$/, ', then submit again.')}`;
     default: return `Not pushed: ${f.text}`;
   }
 }
@@ -192,9 +199,10 @@ async function report(ok, text) {
   clearTimeout(clearBadge);
   await chrome.action.setBadgeBackgroundColor({ color: ok ? '#1a7f37' : '#cf222e' });
   await chrome.action.setBadgeText({ text: ok ? 'OK' : '!' });
+  await chrome.action.setTitle({ title: `AC2Git – ${text}` }); // the badge in words; also the button's accessible name
   // A lasting OK would vouch for a later submission that never landed. 10 s is inside the
   // worker's 30 s idle limit, so the timer fires. A red ! stays until the next success or a browser restart.
-  if (ok) clearBadge = setTimeout(() => chrome.action.setBadgeText({ text: '' }), 10_000);
+  if (ok) clearBadge = setTimeout(() => { chrome.action.setBadgeText({ text: '' }); chrome.action.setTitle({ title: 'AC2Git' }); }, 10_000);
 }
 
 // ---- GitHub
