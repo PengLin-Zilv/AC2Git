@@ -1,6 +1,6 @@
 ## AC2Git
 
-Push Accepted LeetCode submissions to the user's `leetcode-submissions` GitHub repo.
+Push your Accepted LeetCode submissions to your `leetcode-submissions` GitHub repo.
 
 Existing tools/extensions use GitHub OAuth with the `repo` scope: read/write on **every** repo, public and private.
 The real need is to write one file into one repo, so AC2Git's token can do exactly that and nothing more.
@@ -22,7 +22,7 @@ The real need is to write one file into one repo, so AC2Git's token can do exact
 3. `git clone https://github.com/PengLin-Zilv/AC2Git.git`, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the folder. Pin the AC2Git icon. Needs Chrome 140+.
 4. Click the icon, paste the token, and click **Test & save**. AC2Git checks, read-only, that the token reaches `leetcode-submissions`, none of your other repos, and has no SSH-key permission. A token that fails is rejected and not saved. The same check runs before every push.
    What it can't detect: an **All repositories** token while `leetcode-submissions` is the only repo you own (the first push after you create a second repo catches it), and extra permissions beyond step 2. Grant only what step 2 lists.
-5. Submit on LeetCode as usual. Only **Submit** counts, not **Run**.
+5. Submit on LeetCode as usual. Only **Submit** will count, **Run** doesn't.
 
 When a submission is Accepted:
 
