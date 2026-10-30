@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- AC2Git master (48 and 128 px). Code brackets with an up arrow: your code, pushed up to your repo.
+       96 px artwork with 16 px transparent padding per side (Chrome Web Store guidance).
+       One colour, #5b7ff5: at least 3:1 on white and on dark toolbars (#202124 to #3c3c3c),
+       and clear of the badge's green (#1a7f37) and red (#cf222e). -->
+  <g fill="#5b7ff5">
+    <path d="M16 16H42V26H26V102H42V112H16Z"/>
+    <path d="M112 16H86V26H102V102H86V112H112Z"/>
+    <path d="M64 33L89 60H40Z"/>
+    <rect x="58" y="58" width="12" height="42"/>
+  </g>
+</svg>

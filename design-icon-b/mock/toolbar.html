@@ -1,0 +1,39 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>AC2Git icon: toolbar mock</title>
+<style>
+  /* Badge geometry from Chromium icon_with_badge_image_source.cc: 28 dip icon area, 16 dip icon
+     centred, badge 14 dip high on the area's bottom edge, right-aligned below 20 dip wide,
+     width = max(14, text + 4) evened to the area's parity, radius 4, and a 1 dip cutout around it. */
+  body { margin: 0; padding: 12px; font: 12px/16px system-ui, sans-serif; background: #e8eaed; color: #3c4043; }
+  .panel { display: inline-block; vertical-align: top; margin: 0 12px 12px 0; padding: 10px 12px; border-radius: 8px; }
+  .light { background: #ffffff; color: #3c4043; --tb: #ffffff; }
+  .dark { background: #3c3c3c; color: #e8eaed; --tb: #3c3c3c; }
+  .row { display: flex; gap: 6px; align-items: center; }
+  .cap { display: flex; gap: 6px; margin-top: 4px; font-size: 10px; line-height: 12px; }
+  .cap span { width: 28px; text-align: center; }
+  .btn { position: relative; width: 28px; height: 28px; border-radius: 14px; }
+  .btn img, .btn .tile { position: absolute; left: 6px; top: 6px; width: 16px; height: 16px; }
+  .tile { border-radius: 3px; background: #80868b; color: #fff; font: 700 11px/16px system-ui, sans-serif; text-align: center; }
+  .cut { position: absolute; bottom: -1px; right: -1px; height: 16px; border-radius: 5px; background: var(--tb); }
+  .badge { position: absolute; bottom: 0; right: 0; height: 14px; border-radius: 4px; color: #fff;
+           font: 700 9px/14px system-ui, sans-serif; text-align: center; }
+  .ok .badge { width: 18px; background: #1a7f37; } .ok .cut { width: 20px; }
+  .err .badge { width: 14px; background: #cf222e; } .err .cut { width: 16px; }
+  .omni { width: 120px; height: 28px; border-radius: 14px; background: color-mix(in srgb, currentColor 9%, var(--tb)); }
+  h1 { margin: 0 0 8px; font-size: 12px; font-weight: 600; }
+</style>
+<body>
+<script>
+const btn = (kind) => {
+  const icon = kind === 'default' ? '<div class="tile">A</div>'
+    : '<img src="../png/icon16.png" srcset="../png/icon16.png 1x, ../png/icon32.png 2x" alt="">';
+  const badge = kind === 'ok' ? '<i class="cut"></i><b class="badge">OK</b>' : kind === 'err' ? '<i class="cut"></i><b class="badge">!</b>' : '';
+  return `<div class="btn ${kind}">${icon}${badge}</div>`;
+};
+for (const theme of ['light', 'dark']) {
+  document.body.insertAdjacentHTML('beforeend', `<div class="panel ${theme}"><h1>${theme} toolbar</h1>
+    <div class="row"><div class="omni"></div>${['default', 'none', 'ok', 'err'].map(btn).join('')}</div>
+    <div class="cap"><span style="width:120px;text-align:left">omnibox</span><span>default</span><span>idle</span><span>OK</span><span>!</span></div></div>`);
+}
+</script>

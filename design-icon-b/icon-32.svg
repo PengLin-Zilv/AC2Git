@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Hand-tuned for 32 px (16 dip at 2x): every edge on whole pixels, 3 px brackets, 4 px stem. -->
+  <g fill="#5b7ff5">
+    <path d="M1 1H8V4H4V28H8V31H1Z"/>
+    <path d="M31 1H24V4H28V28H24V31H31Z"/>
+    <path d="M16 6L23 14H9Z"/>
+    <rect x="14" y="13" width="4" height="15"/>
+  </g>
+</svg>
