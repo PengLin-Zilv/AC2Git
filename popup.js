@@ -46,8 +46,7 @@ function showStatus(reply) {
   if (failed) rows.push(row('none', "Couldn't load status. Reopen AC2Git to try again."));
   else {
     if (saved) rows.push(el('p', 'repo', 'Pushes to ', ...rich(reply.repo)));
-    // The revoked sentence is the only status that says this. Same pre-filled token page as setup.
-    const revoked = typeof reply.last?.text === 'string' && reply.last.text.includes('expired or revoked');
+    const revoked = reply.last?.kind === 'revoked'; // GitHub rejected the token: link the token page
     if (reply.last) rows.push(row(reply.last.ok ? 'ok' : 'err', reply.last.text, reply.last.at, revoked ? newTokenHint() : undefined));
     else if (saved) rows.push(row('none', 'No pushes yet.', 0, 'Reload LeetCode tabs, then Submit (not Run).'));
     else rows.push(row('none', 'No token saved.'));

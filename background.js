@@ -6,6 +6,8 @@ const storageLocked = chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTE
 
 const TARGET = 'leetcode-submissions';
 const PATH = /^\d{4,}-[a-z0-9]+(?:-[a-z0-9]+)*\.[a-z]+$/; // repo root only: no slashes, no dotfiles
+// Push failures a passing check proves fixed. Not 'noWrite': the check can't prove Contents: write.
+const TOKEN_FIXES = ['revoked', 'overScoped', 'noTarget', 'noToken'];
 const LEETCODE_FAILED = "Not pushed: couldn't read the submission from LeetCode. Submit again. If it keeps failing, LeetCode may have changed its API.";
 
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
@@ -48,8 +50,17 @@ async function save(raw) {
   const { owner: { login: owner }, name: repo } = proof.target;
   await storageLocked;
   await chrome.storage.local.set({ token, owner, repo });
+  // In the push queue, so a push still checking the old token can't re-report after the clear. The token is
+  // stored either way: a clear that fails is only a stale row, never "Not saved".
+  await new Promise((done) => enqueue(() => clearTokenFailure().finally(done)));
   return { ok: true, text: proof.checked ? `Saved. Reaches ${repo} and none of your other repos (${proof.checked} checked).`
     : `Saved. Reaches ${repo}, and no other repo of yours is visible to it.` };
+}
+
+// A new token fixes a token failure, so its red row and ! would be stale. Other failures stay.
+async function clearTokenFailure() {
+  const { last } = await chrome.storage.local.get('last');
+  if (TOKEN_FIXES.includes(last?.kind)) await Promise.all([chrome.storage.local.remove('last'), clearBadgeAndTitle()]);
 }
 
 async function status() {
@@ -148,14 +159,14 @@ function enqueue(job) {
 
 async function push(file) {
   const { token } = await chrome.storage.local.get('token');
-  if (!token) return report(false, 'Not pushed: no token saved. Paste one in AC2Git, then submit again.');
+  if (!token) return report(false, 'Not pushed: no token saved. Paste one in AC2Git, then submit again.', 'noToken');
   const proof = await check(token); // on a reject, storage stays as is: the next push checks again
-  if (!proof.ok) return report(false, notPushed(proof));
+  if (!proof.ok) return refuse(proof);
   try {
     const failure = await commit(token, proof.target, file);
-    return failure ? report(false, notPushed(failure)) : report(true, `OK ${file.path}`);
+    return failure ? refuse(failure) : report(true, `OK ${file.path}`);
   } catch {
-    return report(false, notPushed({ kind: 'github', status: 'network' }));
+    return refuse({ kind: 'github', status: 'network' });
   }
 }
 
@@ -175,15 +186,18 @@ async function commit(token, target, { path, content, message }) {
 
 function writeFailure(status) {
   if (status === 401) return { kind: 'revoked' };
-  if (status === 403 || status === 404) return { kind: 'noTarget' };
+  if (status === 403 || status === 404) return { kind: 'noWrite' };
   return { kind: 'github', status };
 }
+
+const refuse = (f) => report(false, notPushed(f), f.kind);
 
 // A token fix doesn't bring back the missed submission, so those texts end with "then submit again".
 function notPushed(f) {
   switch (f.kind) {
     case 'revoked': return 'Not pushed: GitHub rejected the token (expired or revoked). Paste a new one in AC2Git, then submit again.';
-    case 'noTarget': return "Not pushed: can't write to leetcode-submissions. Check the repo exists and the token selects it with Contents: Read and write, then submit again.";
+    case 'noTarget':
+    case 'noWrite': return "Not pushed: can't write to leetcode-submissions. Check the repo exists and the token selects it with Contents: Read and write, then submit again.";
     case 'github': return f.status === 'network' ? "Not pushed: couldn't reach GitHub. Submit again." : `Not pushed: GitHub error ${f.status}. Submit again.`;
     case 'overScoped': return `Not pushed: ${f.text.replace(/\.$/, ', then submit again.')}`;
     default: return `Not pushed: ${f.text}`;
@@ -194,16 +208,20 @@ function notPushed(f) {
 
 let clearBadge;
 
-async function report(ok, text) {
-  await chrome.storage.local.set({ last: { ok, text, at: Date.now() } });
+// `kind` names a failure for save() and the popup; `last` only ever goes to the popup, never to a content script.
+async function report(ok, text, kind) {
+  await chrome.storage.local.set({ last: { ok, text, at: Date.now(), kind } });
   clearTimeout(clearBadge);
   await chrome.action.setBadgeBackgroundColor({ color: ok ? '#1a7f37' : '#cf222e' });
   await chrome.action.setBadgeText({ text: ok ? 'OK' : '!' });
   await chrome.action.setTitle({ title: `AC2Git – ${text}` }); // the badge in words; also the button's accessible name
   // A lasting OK would vouch for a later submission that never landed. 10 s is inside the
-  // worker's 30 s idle limit, so the timer fires. A red ! stays until the next success or a browser restart.
-  if (ok) clearBadge = setTimeout(() => { chrome.action.setBadgeText({ text: '' }); chrome.action.setTitle({ title: 'AC2Git' }); }, 10_000);
+  // worker's 30 s idle limit, so the timer fires. A red ! stays until the next success, a save that fixes it (0013),
+  // or a browser restart.
+  if (ok) clearBadge = setTimeout(clearBadgeAndTitle, 10_000);
 }
+
+const clearBadgeAndTitle = () => Promise.all([chrome.action.setBadgeText({ text: '' }), chrome.action.setTitle({ title: 'AC2Git' })]);
 
 // ---- GitHub
 
