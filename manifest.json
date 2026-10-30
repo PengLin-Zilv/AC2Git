@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "AC2Git",
   "version": "1.0.0",
-  "description": "Pushes Accepted LeetCode submissions to your leetcode-submissions GitHub repo, with a token checked to reach no other repo.",
+  "description": "Auto-push Accepted LeetCode solutions to GitHub, using a token limited to a single repo.",
   "minimum_chrome_version": "140",
   "permissions": ["storage"],
   "host_permissions": ["https://api.github.com/*"],
