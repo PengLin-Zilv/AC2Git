@@ -27,15 +27,6 @@ window.addEventListener('message', (e) => {
 });
 
 async function onAccepted(id) {
-  // Nothing is saved yet: don't ask LeetCode for the solution code. status() returns the repo, never the token.
-  let saved = false;
-  try {
-    const status = await chrome.runtime.sendMessage({ type: 'status' });
-    saved = Boolean(status?.repo);
-  } catch {
-    return;
-  }
-  if (!saved) return;
   try {
     const s = await judgedSubmission(id);
     if (s.statusCode === ACCEPTED) send({ type: 'push', ...toFile(s) }); // any other verdict: do nothing
@@ -80,8 +71,8 @@ function toFile({ code, lang, question }) {
   };
 }
 
-// background.js replies when the attempt finishes. Sending throws once the extension is
-// reloaded under an open tab; this tab can't fix that.
+// background.js never replies to these, and sending throws once the extension is reloaded
+// under an open tab. Neither is something this tab can act on.
 function send(msg) {
   try {
     chrome.runtime.sendMessage(msg).catch(() => {});
