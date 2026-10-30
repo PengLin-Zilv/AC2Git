@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "AC2Git",
+  "name": "AC2Git: LeetCode to GitHub",
   "version": "1.0.0",
   "description": "Auto-push Accepted LeetCode solutions to GitHub, using a token limited to a single repo.",
   "minimum_chrome_version": "140",

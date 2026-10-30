@@ -35,6 +35,8 @@ Chrome keeps this storage out of reach of web pages, including LeetCode, and doe
 
 The only services AC2Git contacts are LeetCode and GitHub, the two you already use. Their own privacy policies cover what they receive.
 
+AC2Git's use of user data complies with the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq), including the Limited Use requirements.
+
 ## How to delete everything
 
 - **Remove the extension** in `chrome://extensions`. Chrome deletes its stored data, including the token.
