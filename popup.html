@@ -47,9 +47,30 @@
   input:focus-visible { border-color: var(--focus); outline: 1px solid var(--focus); outline-offset: -2px; }
   button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
   #msg:not(:empty) { margin-top: 8px; }
+  /* Setup is the no-token state only. Links open a new tab so the popup closing doesn't lose the page. */
+  .setup { display: none; }
+  body.no-token .setup { display: block; }
+  .setup ol { margin: 8px 0 0; padding: 0 0 0 18px; }
+  .setup li { margin: 4px 0; }
+  .note { display: block; margin-top: 2px; }
+  .disclosure { margin: 0 0 8px; }
+  a { color: var(--focus); }
+  .hint a { color: var(--focus); }
+  a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 </style>
 <section id="status"></section>
+<div class="setup">
+  <ol>
+    <li><a href="https://github.com/new?name=leetcode-submissions" target="_blank" rel="noopener noreferrer">Create the repo</a> named <code>leetcode-submissions</code>.</li>
+    <li>
+      <a id="token-link" href="https://github.com/settings/personal-access-tokens/new?name=AC2Git&amp;description=LeetCode+sync+to+one+repo&amp;expires_in=none&amp;contents=write" target="_blank" rel="noopener noreferrer">Create the token</a>.
+      <span class="note">Under Repository access, choose Only select repositories → <code>leetcode-submissions</code>. GitHub shows the token only once. Come back and paste it.</span>
+    </li>
+    <li>Paste the token and press Test &amp; save.</li>
+  </ol>
+</div>
 <form id="form">
+  <p id="disclosure" class="setup disclosure">Accepted solution code is committed only to your <code>leetcode-submissions</code> repo, and the token stays in this browser and is sent only to api.github.com.</p>
   <div class="field">
     <input id="token" type="text" placeholder="github_pat_…" aria-label="Fine-grained token"
       aria-describedby="status msg" autocomplete="off" spellcheck="false">

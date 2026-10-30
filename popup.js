@@ -22,11 +22,20 @@ const when = (d, now = new Date()) => (d.toDateString() === now.toDateString()
   : d.toLocaleDateString([], { month: 'short', day: 'numeric', year: d.getFullYear() === now.getFullYear() ? undefined : 'numeric' }));
 
 // One row: dot (none: hollow | ok | err | info: no dot, muted text) · text, the time floated right, an optional muted hint.
+// A hint is either text or a ready-made node (the new-token link). Replies stay text, never HTML.
 function row(dot, text, at, hint) {
   const body = el('span', 'body', ...rich(text));
   if (at) body.prepend(Object.assign(el('time', '', when(new Date(at))), { title: new Date(at).toLocaleString() }));
-  if (hint) body.append(el('span', 'hint', ...rich(hint)));
+  if (hint) body.append(typeof hint === 'string' ? el('span', 'hint', ...rich(hint)) : hint);
   return el('p', 'row', Object.assign(el('span', `dot ${dot}`), { ariaHidden: 'true' }), body);
+}
+
+// Same pre-filled token page as the setup step. One click after a revoked token.
+function newTokenHint() {
+  const link = document.getElementById('token-link').cloneNode(true);
+  link.removeAttribute('id');
+  link.textContent = 'Create a new token';
+  return el('span', 'hint', link);
 }
 
 // status reply → {repo, last}; {text} or nothing → the popup couldn't load it, so it claims neither token state.
@@ -37,12 +46,17 @@ function showStatus(reply) {
   if (failed) rows.push(row('none', "Couldn't load status. Reopen AC2Git to try again."));
   else {
     if (saved) rows.push(el('p', 'repo', 'Pushes to ', ...rich(reply.repo)));
-    if (reply.last) rows.push(row(reply.last.ok ? 'ok' : 'err', reply.last.text, reply.last.at));
+    // The revoked sentence is the only status that says this. Same pre-filled token page as setup.
+    const revoked = typeof reply.last?.text === 'string' && reply.last.text.includes('expired or revoked');
+    if (reply.last) rows.push(row(reply.last.ok ? 'ok' : 'err', reply.last.text, reply.last.at, revoked ? newTokenHint() : undefined));
     else if (saved) rows.push(row('none', 'No pushes yet.', 0, 'Reload LeetCode tabs, then Submit (not Run).'));
-    else rows.push(row('none', 'No token saved.', 0, 'Paste a fine-grained token limited to leetcode-submissions.'));
+    else rows.push(row('none', 'No token saved.'));
   }
   statusEl.replaceChildren(...rows);
-  document.body.classList.toggle('no-token', !failed && !saved); // fills the button; unknown counts as neither
+  const noToken = !failed && !saved;
+  document.body.classList.toggle('no-token', noToken); // fills the button; unknown counts as neither
+  // The disclosure is display:none until this class is set, so it is named only while visible.
+  input.setAttribute('aria-describedby', noToken ? 'status disclosure msg' : 'status msg');
   input.placeholder = saved ? 'Paste a new token to replace it' : 'github_pat_…';
   input.ariaLabel = saved ? 'Replace token' : 'Fine-grained token';
   if (!failed && !saved) input.focus(); // focus follows purpose: only when there's no token yet

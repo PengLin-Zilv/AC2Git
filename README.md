@@ -14,11 +14,12 @@ The real need is to write one file into one repo, so AC2Git's token can do exact
 ## How to Use
 
 1. Create a GitHub repo named `leetcode-submissions` (public or private).
-2. [Create a fine-grained token](https://github.com/settings/personal-access-tokens/new?name=AC2Git&contents=write):
+2. [Create a fine-grained token](https://github.com/settings/personal-access-tokens/new?name=AC2Git&description=LeetCode+sync+to+one+repo&expires_in=none&contents=write):
    - Resource owner: **you**
    - Repository access: **Only select repositories** → `leetcode-submissions`
    - Permissions: **Contents: Read and write** (GitHub adds Metadata: Read-only)
    - Account permissions: none
+   - Expiration: **No expiration** (the link sets this)
 3. `git clone https://github.com/PengLin-Zilv/AC2Git.git`, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the folder. Pin the AC2Git icon. Needs Chrome 140+.
 4. Click the icon, paste the token, and click **Test & save**. AC2Git checks, read-only, that the token reaches `leetcode-submissions`, none of your other repos, and has no SSH-key permission. A token that fails is rejected and not saved. The same check runs before every push.
    What it can't detect: an **All repositories** token while `leetcode-submissions` is the only repo you own (the first push after you create a second repo catches it), and extra permissions beyond step 2. Grant only what step 2 lists.
