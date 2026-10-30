@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- AC2Git master. The newest commit: a ring with its history running down. Status (the badge) sits where the
+       history is, as on a GitHub commit list. Store icon: 96 px tile inside 16 px of transparent padding.
+       The faint light edge is the store's "subtle white outer glow" for a mostly dark icon on dark pages. -->
+  <rect x="15.5" y="15.5" width="97" height="97" rx="21.5" fill="none" stroke="#fff" stroke-opacity=".3"/>
+  <rect x="16" y="16" width="96" height="96" rx="21" fill="#1f2328"/>
+  <rect x="58" y="76" width="12" height="36" fill="#fff"/>
+  <circle cx="64" cy="55" r="18" fill="none" stroke="#fff" stroke-width="12"/>
+</svg>

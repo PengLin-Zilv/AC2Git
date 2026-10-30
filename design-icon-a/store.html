@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>AC2Git store and extensions-page icons</title>
+<!-- 128 px store icon on light and dark pages, with the 96 px safe area outlined, plus the 48 px icon. -->
+<style>
+  body { margin: 0; display: flex; font: 11px system-ui; }
+  .p { display: flex; align-items: center; gap: 20px; padding: 16px 20px; }
+  .l { background: #ffffff; } .d { background: #202124; }
+  .safe { position: relative; }
+  .safe::after { content: ""; position: absolute; inset: 16px; outline: 1px dashed #e5534b; outline-offset: 0; }
+</style>
+<div class="p l"><div class="safe"><img src="icon128.png" width="128" alt=""></div><img src="icon128.png" width="128" alt=""><img src="icon48.png" width="48" alt=""></div>
+<div class="p d"><img src="icon128.png" width="128" alt=""><img src="icon48.png" width="48" alt=""></div>
