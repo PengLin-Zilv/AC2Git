@@ -173,7 +173,21 @@ The project is now open source, and its safety rests on the fail-closed token ch
 `node --test` must pass before any change to `background.js`, `content.js`, `hook.js` or `popup.*`. This is a deliberate exception to "fewest files": the store zip ships only the extension files, so `test/` costs users nothing. That holds only if the zip is built from the commit with the files named:
 
 ```
-git archive --format=zip -o ../ac2git-$(git describe --always).zip HEAD manifest.json background.js content.js hook.js popup.html popup.js
+git archive --format=zip -o ../ac2git-$(git describe --always).zip HEAD manifest.json background.js content.js hook.js popup.html popup.js 'icons/*.png'
 ```
 
-Add the icon files once they land. Zipping the folder would also ship `test/`, the docs, and the local `CLAUDE.md` and `CONTEXT.md`.
+Zipping the folder would also ship `test/`, the docs, and the local `CLAUDE.md` and `CONTEXT.md`.
+
+## 0015 · The icon is a commit on a near-black tile (2026-10-30)
+
+A white git commit: a ring with its line running through it, on a `#1c1e24` tile. It ships as `icons/icon{16,32,48,128}.png`. The hand-tuned SVG sources are next to them (`icons/icon-{16,32,48,128}.svg`), so the PNGs can be re-exported after an edit. They stay out of the store zip.
+
+- **Monochrome on purpose.** The badge's green `OK` and red `!` are the only colour on the button, as in the popup, where colour means status (0009). There is no checkmark, because a check in the icon would vouch for every push forever.
+- **Built around the badge.** Chrome's badge covers the bottom 9 rows of the 16 px icon, so at 16 and 32 px the ring sits high, on whole pixels, with a top stub that no badge reaches. Checked in Chrome on 2026-10-30: with the green `OK`, the widest badge, the stub and the top of the ring still show. At 48 and 128 px no badge lands, so the commit is centred. The 128 px icon follows the store rule: a 96 px tile in 16 px of padding, with a soft glow instead of an edge.
+- **Keyline.** A 16 % white keyline keeps the tile visible on Chrome's darkest toolbars.
+- **The commit reads as GitHub's CI status.** With the badge on, the toolbar reads like a commit with a green or red status, which is what AC2Git produces.
+
+**Considered:** `[↑]`, code brackets with an up arrow. It was more legible bare and clearer to non-git users, but it read as a generic upload or export glyph, and at 128 px like a stock icon. A tie-break review picked the commit.
+
+**Brand care:** the tile colour avoids GitHub's `#1f2328`, because the badge already uses GitHub's green and red. The mark stays vertical and heavy, unlike GitHub's thin horizontal commit octicon.
+
