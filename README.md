@@ -1,5 +1,7 @@
 ## AC2Git
 
+[Install from the Chrome Web Store](https://chromewebstore.google.com/detail/ac2git-leetcode-to-github/lhjleohalcomkbppbhnfolodkchgppef)
+
 Push your Accepted LeetCode submissions to your `leetcode-submissions` GitHub repo.
 
 Existing tools/extensions use GitHub OAuth with the `repo` scope: read/write on **every** repo, public and private.
@@ -20,7 +22,7 @@ The real need is to write one file into one repo, so AC2Git's token can do exact
    - Permissions: **Contents: Read and write** (GitHub adds Metadata: Read-only)
    - Account permissions: none
    - Expiration: **No expiration** (the link sets this)
-3. `git clone https://github.com/PengLin-Zilv/AC2Git.git`, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the folder. Pin the AC2Git icon. Needs Chrome 140+.
+3. Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/ac2git-leetcode-to-github/lhjleohalcomkbppbhnfolodkchgppef) and pin the AC2Git icon. Needs Chrome 140+.
 4. Click the icon, paste the token, and click **Test & save**. AC2Git checks, read-only, that the token reaches `leetcode-submissions`, none of your other repos, and has no SSH-key permission. A token that fails is rejected and not saved. The same check runs before every push.
    What it can't detect: an **All repositories** token while `leetcode-submissions` is the only repo you own (the first push after you create a second repo catches it), and extra permissions beyond step 2. Grant only what step 2 lists.
 5. Submit on LeetCode as usual. Only **Submit** will count, **Run** doesn't.
@@ -34,3 +36,15 @@ When a submission is Accepted:
 The icon shows a green `OK` when the code lands and a red `!` when it doesn't. Click the icon to see why.
 
 No badge at all? Reload the LeetCode tab (needed once after installing or updating) and submit again.
+
+## Development
+
+1. `git clone https://github.com/PengLin-Zilv/AC2Git.git`
+2. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the cloned folder.
+3. After code changes, click the reload button on the AC2Git card and reload LeetCode tabs.
+
+Issues and pull requests welcome.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
