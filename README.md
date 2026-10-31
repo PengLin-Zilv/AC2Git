@@ -39,4 +39,12 @@ No badge at all? Reload the LeetCode tab (needed once after installing or updati
 
 ## Development
 
-`git clone https://github.com/PengLin-Zilv/AC2Git.git`, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the folder. Remove the store version first (or disable it) so the two don't both push. After code changes, click the reload button on the AC2Git card and reload LeetCode tabs. For each store release, bump `version` in `manifest.json` and tag `vX.Y.Z`.
+1. `git clone https://github.com/PengLin-Zilv/AC2Git.git`
+2. Open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and pick the cloned folder.
+3. After code changes, click the reload button on the AC2Git card and reload LeetCode tabs.
+
+Issues and pull requests welcome.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
