@@ -27,7 +27,6 @@ An Accepted submission becomes one file, such as `0001-two-sum.py`, with commit 
 - Only **Submit** counts. **Run** does not.
 - No badge at all? Reload the LeetCode tab once after installing or updating, then submit again.
 - **Test & save** checks, read-only, that the token reaches `leetcode-submissions`, none of your other repos, and has no SSH-key permission. A token that fails is rejected and not saved. The same check runs before every push.
-- What it can't detect: an **All repositories** token while `leetcode-submissions` is the only repo you own (the first push after you create a second repo catches it), and extra permissions beyond Contents: Read and write. The link presets the name, description, no expiration, and Contents: Read and write; GitHub also adds Metadata: Read-only. Leave those as they are.
 
 ## Development
 
